@@ -45,6 +45,11 @@ export function useBooks() {
     const controller = new AbortController()
     activeController = controller
 
+    // ofetch's own `timeout` option is silently ignored whenever a custom
+    // `signal` is also passed (needed here to cancel stale searches), so the
+    // timeout has to be driven manually via this same controller.
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+
     searchLoading.value = true
     searchError.value = null
 
@@ -55,15 +60,16 @@ export function useBooks() {
           fields: 'key,title,author_name,first_publish_year,cover_i',
           limit: 24
         },
-        signal: controller.signal,
-        timeout: REQUEST_TIMEOUT_MS
+        signal: controller.signal
       })
       results.value = data.docs.map(mapSearchDoc)
     } catch (err: unknown) {
-      if (controller.signal.aborted) return
+      // A newer search superseded this one — its own handler owns the state, so bail silently.
+      if (activeController !== controller) return
       results.value = []
       searchError.value = 'Could not reach Open Library. Check your connection and try again.'
     } finally {
+      clearTimeout(timeoutId)
       if (activeController === controller) {
         searchLoading.value = false
       }
