@@ -32,3 +32,17 @@ export const Small: Story = {
     size: 'sm'
   }
 }
+
+export const IconInactive: Story = {
+  args: {
+    active: false,
+    variant: 'icon'
+  }
+}
+
+export const IconActive: Story = {
+  args: {
+    active: true,
+    variant: 'icon'
+  }
+}

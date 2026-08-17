@@ -10,26 +10,32 @@ defineEmits<{ toggleShortlist: [] }>()
 </script>
 
 <template>
-  <div class="group relative flex flex-col overflow-hidden rounded-card border border-surface-200 bg-surface-0 transition-shadow hover:shadow-md">
+  <div class="group relative flex flex-col overflow-hidden rounded-card border border-surface-200 bg-surface-0 transition-all duration-200 hover:-translate-y-0.5 hover:border-surface-300 hover:shadow-lg">
     <NuxtLink :to="`/books/${book.id}`" class="flex flex-1 flex-col focus-visible:outline-2 focus-visible:outline-offset-[-2px]">
-      <div class="flex aspect-[2/3] items-center justify-center bg-surface-100">
+      <div class="relative aspect-[2/3] overflow-hidden bg-surface-100">
         <img
           v-if="book.coverUrl"
           :src="book.coverUrl"
           :alt="`Cover of ${book.title}`"
           loading="lazy"
-          class="h-full w-full object-cover"
+          class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         >
-        <span v-else class="px-4 text-center text-sm text-surface-600" aria-hidden="true">No cover available</span>
+        <div v-else class="flex h-full w-full flex-col items-center justify-center gap-1 px-4 text-center">
+          <span class="text-2xl" aria-hidden="true">📕</span>
+          <span class="text-xs text-surface-600">No cover available</span>
+        </div>
+
+        <div class="absolute right-2 top-2">
+          <ShortlistButton variant="icon" :active="shortlisted" @toggle="$emit('toggleShortlist')" />
+        </div>
       </div>
-      <div class="flex flex-1 flex-col gap-1 p-3">
-        <h3 class="line-clamp-2 text-sm font-semibold text-surface-900">{{ book.title }}</h3>
+      <div class="flex flex-1 flex-col gap-0.5 p-3">
+        <h3 class="line-clamp-2 text-sm font-semibold leading-snug text-surface-900 group-hover:text-brand-700">
+          {{ book.title }}
+        </h3>
         <p class="line-clamp-1 text-sm text-surface-600">{{ book.author ?? 'Unknown author' }}</p>
-        <p class="mt-auto text-xs text-surface-600">{{ book.firstPublishYear ?? 'Year unknown' }}</p>
+        <p class="mt-auto pt-2 text-xs font-medium text-surface-600">{{ book.firstPublishYear ?? 'Year unknown' }}</p>
       </div>
     </NuxtLink>
-    <div class="p-3 pt-0">
-      <ShortlistButton size="sm" :active="shortlisted" @toggle="$emit('toggleShortlist')" />
-    </div>
   </div>
 </template>
