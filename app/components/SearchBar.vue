@@ -18,7 +18,7 @@ defineEmits<{ search: [] }>()
         v-model="modelValue"
         type="search"
         placeholder="Search by title or author…"
-        class="w-full rounded-control border border-surface-300 bg-surface-0 py-2.5 pl-10 pr-9 text-sm text-surface-900 shadow-sm transition-colors placeholder:text-surface-600 focus-visible:border-brand-600"
+        class="w-full rounded-control border border-surface-300 bg-surface-0 py-2.5 pl-10 pr-9 text-sm text-surface-900 shadow-sm transition-colors placeholder:text-surface-600 focus-visible:border-brand-600 [&::-webkit-search-cancel-button]:hidden"
       >
       <button
         v-if="modelValue"
