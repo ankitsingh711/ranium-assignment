@@ -1,4 +1,4 @@
-export type BookSource = 'openlibrary' | 'googlebooks'
+export type BookSource = 'openlibrary' | 'archive'
 
 export interface BookSummary {
   id: string
@@ -62,26 +62,36 @@ export interface OpenLibraryEditionsResponse {
 }
 
 /**
- * Fallback data source, used only when Open Library is unreachable. Kept to
- * the same minimal-fields-we-actually-use approach as the Open Library types.
+ * Fallback data source, used only when Open Library is unreachable. Many
+ * fields on Internet Archive's items are inconsistently either a single
+ * string or an array of strings, which is reflected below rather than
+ * normalized away, so the mapping layer has to handle both explicitly.
  */
-export interface GoogleBooksVolume {
-  id: string
-  volumeInfo?: {
-    title?: string
-    authors?: string[]
-    publishedDate?: string
-    description?: string
-    publisher?: string
-    pageCount?: number
-    categories?: string[]
-    imageLinks?: {
-      thumbnail?: string
-      large?: string
-    }
+export interface ArchiveOrgSearchDoc {
+  identifier: string
+  title?: string
+  creator?: string | string[]
+  year?: string | number
+}
+
+export interface ArchiveOrgSearchResponse {
+  response?: {
+    docs: ArchiveOrgSearchDoc[]
   }
 }
 
-export interface GoogleBooksSearchResponse {
-  items?: GoogleBooksVolume[]
+export interface ArchiveOrgMetadata {
+  identifier?: string
+  title?: string
+  creator?: string | string[]
+  description?: string | string[]
+  publisher?: string | string[]
+  year?: string | number
+  date?: string
+  subject?: string | string[]
+  imagecount?: string | number
+}
+
+export interface ArchiveOrgMetadataResponse {
+  metadata?: ArchiveOrgMetadata
 }
