@@ -24,6 +24,10 @@ function describeWork(description: OpenLibraryWork['description']): string | nul
   return description.value ?? null
 }
 
+// Open Library has no SLA; without a client-side cap a slow/unreachable
+// connection leaves the UI spinning forever instead of surfacing an error.
+const REQUEST_TIMEOUT_MS = 10_000
+
 export function useBooks() {
   const searchLoading = ref(false)
   const searchError = ref<string | null>(null)
@@ -54,13 +58,14 @@ export function useBooks() {
           fields: 'key,title,author_name,first_publish_year,cover_i',
           limit: 24
         },
-        signal: controller.signal
+        signal: controller.signal,
+        timeout: REQUEST_TIMEOUT_MS
       })
       results.value = data.docs.map(mapSearchDoc)
     } catch (err: unknown) {
       if (controller.signal.aborted) return
       results.value = []
-      searchError.value = 'Something went wrong while searching. Please try again.'
+      searchError.value = 'Could not reach Open Library. Check your connection and try again.'
     } finally {
       if (activeController === controller) {
         searchLoading.value = false
@@ -74,16 +79,24 @@ export function useBooks() {
 export async function getBookDetail(id: string): Promise<BookDetail> {
   let work: OpenLibraryWork
   try {
-    work = await $fetch<OpenLibraryWork>(`https://openlibrary.org/works/${id}.json`)
-  } catch {
-    throw createError({ statusCode: 404, statusMessage: 'Book not found' })
+    work = await $fetch<OpenLibraryWork>(`https://openlibrary.org/works/${id}.json`, {
+      timeout: REQUEST_TIMEOUT_MS
+    })
+  } catch (err: unknown) {
+    const status = (err as { response?: { status?: number } })?.response?.status
+    if (status === 404) {
+      throw createError({ statusCode: 404, statusMessage: 'Book not found' })
+    }
+    throw createError({ statusCode: 503, statusMessage: 'Open Library is unavailable' })
   }
 
   let author: string | null = null
   const authorKey = work.authors?.[0]?.author?.key
   if (authorKey) {
     try {
-      const authorData = await $fetch<OpenLibraryAuthor>(`https://openlibrary.org${authorKey}.json`)
+      const authorData = await $fetch<OpenLibraryAuthor>(`https://openlibrary.org${authorKey}.json`, {
+        timeout: REQUEST_TIMEOUT_MS
+      })
       author = authorData.name ?? null
     } catch {
       // Author lookup is best-effort; UI falls back to "Unknown author".
@@ -95,7 +108,7 @@ export async function getBookDetail(id: string): Promise<BookDetail> {
   try {
     const editions = await $fetch<OpenLibraryEditionsResponse>(
       `https://openlibrary.org/works/${id}/editions.json`,
-      { params: { limit: 5 } }
+      { params: { limit: 5 }, timeout: REQUEST_TIMEOUT_MS }
     )
     const withPublisher = editions.entries?.find((e) => e.publishers?.length)
     const withPages = editions.entries?.find((e) => e.number_of_pages)

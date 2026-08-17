@@ -26,8 +26,12 @@ const { isShortlisted, toggle } = useShortlist()
 
     <ErrorState
       v-else-if="error"
-      title="Couldn't load this book"
-      message="This book may not exist, or Open Library is temporarily unavailable."
+      :title="error.statusCode === 404 ? 'Book not found' : 'Couldn\'t load this book'"
+      :message="
+        error.statusCode === 404
+          ? 'This book doesn\'t exist, or the link is incorrect.'
+          : 'Could not reach Open Library. Check your connection and try again.'
+      "
       @retry="refresh"
     />
 
