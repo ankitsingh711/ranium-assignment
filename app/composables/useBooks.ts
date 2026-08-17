@@ -24,8 +24,6 @@ function describeWork(description: OpenLibraryWork['description']): string | nul
   return description.value ?? null
 }
 
-// Open Library has no SLA; without a client-side cap a slow/unreachable
-// connection leaves the UI spinning forever instead of surfacing an error.
 const REQUEST_TIMEOUT_MS = 10_000
 
 export function useBooks() {
@@ -43,7 +41,6 @@ export function useBooks() {
       return
     }
 
-    // Cancel any in-flight search before starting a new one.
     activeController?.abort()
     const controller = new AbortController()
     activeController = controller
@@ -99,7 +96,6 @@ export async function getBookDetail(id: string): Promise<BookDetail> {
       })
       author = authorData.name ?? null
     } catch {
-      // Author lookup is best-effort; UI falls back to "Unknown author".
     }
   }
 
@@ -115,7 +111,6 @@ export async function getBookDetail(id: string): Promise<BookDetail> {
     publisher = withPublisher?.publishers?.[0] ?? null
     pageCount = withPages?.number_of_pages ?? null
   } catch {
-    // Editions are a best-effort enrichment; missing data is expected and handled by the UI.
   }
 
   return {

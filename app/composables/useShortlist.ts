@@ -2,8 +2,6 @@ import type { BookDetail, BookSummary, ShortlistItem } from '~/types/book'
 
 const STORAGE_KEY = 'shelf:shortlist'
 
-// Module-level state so every component shares the same reactive list
-// instead of each `useShortlist()` call owning its own copy.
 const items = ref<ShortlistItem[]>([])
 let hydrated = false
 
@@ -14,7 +12,6 @@ function hydrate() {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) items.value = JSON.parse(raw) as ShortlistItem[]
   } catch {
-    // Corrupt/blocked storage — start from an empty shortlist rather than crashing.
     items.value = []
   }
 }
@@ -24,7 +21,6 @@ function persist() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items.value))
   } catch {
-    // Storage may be full or disabled (e.g. private browsing) — fail silently.
   }
 }
 

@@ -1,11 +1,5 @@
-/**
- * Application-level book types. These are deliberately narrower than the
- * raw Open Library API responses — only fields the UI actually uses are
- * kept, and every optional/inconsistent field is modeled as `| null`.
- */
-
 export interface BookSummary {
-  id: string // Open Library work id, e.g. "OL27448W"
+  id: string
   title: string
   author: string | null
   firstPublishYear: number | null
@@ -28,8 +22,6 @@ export interface ShortlistItem {
   firstPublishYear: number | null
   addedAt: number
 }
-
-/** Raw shapes from Open Library — kept minimal, only what we read. */
 
 export interface OpenLibrarySearchDoc {
   key: string
