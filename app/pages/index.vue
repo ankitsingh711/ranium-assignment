@@ -92,7 +92,7 @@ if (initialQuery) {
         role="status"
       >
         <Icon name="lucide:info" class="h-4 w-4 shrink-0" />
-        Open Library is unavailable right now — showing results from the Internet Archive instead.
+        Open Library is unavailable right now — showing results from Apple Books instead.
       </div>
 
       <SearchFilters

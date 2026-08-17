@@ -30,10 +30,10 @@ defineEmits<{ toggleShortlist: [] }>()
         </div>
 
         <span
-          v-if="book.source === 'archive'"
+          v-if="book.source === 'itunes'"
           class="absolute left-2 top-2 rounded-full bg-surface-900/75 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur"
         >
-          Internet Archive
+          Apple Books
         </span>
       </div>
       <div class="flex flex-1 flex-col gap-0.5 p-3">

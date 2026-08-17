@@ -1,9 +1,8 @@
 import type {
-  ArchiveOrgMetadataResponse,
-  ArchiveOrgSearchDoc,
-  ArchiveOrgSearchResponse,
   BookDetail,
   BookSummary,
+  ItunesBookResult,
+  ItunesSearchResponse,
   OpenLibraryAuthor,
   OpenLibraryEditionsResponse,
   OpenLibrarySearchResponse,
@@ -16,12 +15,9 @@ import { coverUrl, workIdFromKey } from '~/utils/covers'
 // `signal` (i.e. the two search calls, which can be cancelled by a newer
 // search) is driven manually via setTimeout + AbortController instead.
 const OPEN_LIBRARY_TIMEOUT_MS = 5_000
-// archive.org's search endpoint (advancedsearch.php) runs noticeably slower
-// than Open Library's even when healthy — observed 2-7s round trips during
-// development — so it gets a longer allowance before being treated as down.
-const ARCHIVE_TIMEOUT_MS = 8_000
+const ITUNES_TIMEOUT_MS = 5_000
 
-const ARCHIVE_ID_PREFIX = 'ia_'
+const ITUNES_ID_PREFIX = 'it_'
 
 function mapOpenLibrarySearchDoc(doc: OpenLibrarySearchResponse['docs'][number]): BookSummary {
   return {
@@ -46,37 +42,21 @@ function parseYear(value: string | number | null | undefined): number | null {
   return Number.isNaN(year) ? null : year
 }
 
-// Internet Archive metadata fields are inconsistently either a bare string
-// or an array of strings depending on the item, so every read of one goes
-// through these instead of assuming a shape.
-function toArray(value: string | string[] | undefined): string[] {
-  if (!value) return []
-  return Array.isArray(value) ? value : [value]
+// iTunes only gives back a 100x100 thumbnail URL; the size is encoded in the
+// path itself, so a bigger one is requested by rewriting that segment.
+function upscaleArtwork(url: string | undefined): string | null {
+  if (!url) return null
+  return url.replace(/\/\d+x\d+bb\.(jpg|png)$/, '/600x600bb.$1')
 }
 
-function firstOf(value: string | string[] | undefined): string | null {
-  return toArray(value)[0] ?? null
-}
-
-function splitSubjects(value: string | string[] | undefined): string[] {
-  return toArray(value)
-    .flatMap((entry) => entry.split(';'))
-    .map((entry) => entry.trim())
-    .filter(Boolean)
-}
-
-function archiveCoverUrl(identifier: string): string {
-  return `https://archive.org/services/img/${identifier}`
-}
-
-function mapArchiveOrgDoc(doc: ArchiveOrgSearchDoc): BookSummary {
+function mapItunesResult(item: ItunesBookResult): BookSummary {
   return {
-    id: `${ARCHIVE_ID_PREFIX}${doc.identifier}`,
-    title: doc.title ?? 'Untitled',
-    author: firstOf(doc.creator),
-    firstPublishYear: parseYear(doc.year ?? null),
-    coverUrl: archiveCoverUrl(doc.identifier),
-    source: 'archive'
+    id: `${ITUNES_ID_PREFIX}${item.trackId}`,
+    title: item.trackName ?? 'Untitled',
+    author: item.artistName ?? null,
+    firstPublishYear: parseYear(item.releaseDate ?? null),
+    coverUrl: upscaleArtwork(item.artworkUrl100),
+    source: 'itunes'
   }
 }
 
@@ -84,23 +64,16 @@ function abortAfter(controller: AbortController, ms: number): ReturnType<typeof 
   return setTimeout(() => controller.abort(), ms)
 }
 
-async function searchArchiveOrg(query: string, signal: AbortSignal): Promise<BookSummary[]> {
-  // Built as a raw query string (not ofetch's `params` object) so the
-  // repeated `fl[]=` keys advancedsearch.php expects are formed exactly.
-  const qs = new URLSearchParams()
-  qs.set('q', `${query} AND mediatype:(texts)`)
-  for (const field of ['identifier', 'title', 'creator', 'year']) {
-    qs.append('fl[]', field)
-  }
-  qs.set('rows', '24')
-  qs.set('page', '1')
-  qs.set('output', 'json')
-
-  const data = await $fetch<ArchiveOrgSearchResponse>(
-    `https://archive.org/advancedsearch.php?${qs.toString()}`,
-    { signal }
-  )
-  return (data.response?.docs ?? []).map(mapArchiveOrgDoc)
+async function searchItunesBooks(query: string, signal: AbortSignal): Promise<BookSummary[]> {
+  const data = await $fetch<ItunesSearchResponse>('https://itunes.apple.com/search', {
+    params: { term: query, media: 'ebook', limit: 24 },
+    signal,
+    // iTunes serves its JSON as `Content-Type: text/javascript`, which
+    // ofetch's automatic content-type sniffing doesn't recognize as JSON —
+    // without this it silently hands back an unparsed string instead.
+    responseType: 'json'
+  })
+  return (data.results ?? []).map(mapItunesResult)
 }
 
 export function useBooks() {
@@ -148,21 +121,21 @@ export function useBooks() {
     } catch {
       clearTimeout(olTimeoutId)
       if (!isCurrent()) return
-      // Open Library failed or timed out — fall through to the Internet Archive fallback below.
+      // Open Library failed or timed out — fall through to the iTunes fallback below.
     }
 
     const fallbackController = new AbortController()
-    const iaTimeoutId = abortAfter(fallbackController, ARCHIVE_TIMEOUT_MS)
+    const itunesTimeoutId = abortAfter(fallbackController, ITUNES_TIMEOUT_MS)
     try {
-      results.value = await searchArchiveOrg(trimmed, fallbackController.signal)
+      results.value = await searchItunesBooks(trimmed, fallbackController.signal)
       if (!isCurrent()) return
       usedFallback.value = true
     } catch {
       if (!isCurrent()) return
       results.value = []
-      searchError.value = 'Could not reach Open Library or Internet Archive. Check your connection and try again.'
+      searchError.value = 'Could not reach Open Library or Apple Books. Check your connection and try again.'
     } finally {
-      clearTimeout(iaTimeoutId)
+      clearTimeout(itunesTimeoutId)
       if (isCurrent()) searchLoading.value = false
     }
   }
@@ -227,44 +200,46 @@ async function getOpenLibraryDetail(id: string): Promise<BookDetail> {
   }
 }
 
-async function getArchiveOrgDetail(identifier: string): Promise<BookDetail> {
-  let data: ArchiveOrgMetadataResponse
+async function getItunesDetail(trackId: string): Promise<BookDetail> {
+  let data: ItunesSearchResponse
   try {
-    data = await $fetch<ArchiveOrgMetadataResponse>(`https://archive.org/metadata/${identifier}`, {
-      timeout: ARCHIVE_TIMEOUT_MS
+    data = await $fetch<ItunesSearchResponse>('https://itunes.apple.com/lookup', {
+      params: { id: trackId },
+      timeout: ITUNES_TIMEOUT_MS,
+      responseType: 'json'
     })
   } catch {
-    throw createError({ statusCode: 503, statusMessage: 'Internet Archive is unavailable' })
+    throw createError({ statusCode: 503, statusMessage: 'Apple Books is unavailable' })
   }
 
-  // A non-existent identifier returns HTTP 200 with an empty body rather
-  // than a 404, so "no title" is the actual not-found signal here.
-  const metadata = data.metadata
-  if (!metadata?.title) {
+  // A non-existent id returns HTTP 200 with an empty `results` array rather
+  // than a 404, so an empty array is the actual not-found signal here.
+  const item = data.results?.[0]
+  if (!item) {
     throw createError({ statusCode: 404, statusMessage: 'Book not found' })
   }
 
-  const cover = archiveCoverUrl(identifier)
-  const pageCount = metadata.imagecount ? Number.parseInt(String(metadata.imagecount), 10) : null
+  const cover = upscaleArtwork(item.artworkUrl100)
 
   return {
-    id: `${ARCHIVE_ID_PREFIX}${identifier}`,
-    title: metadata.title,
-    author: firstOf(metadata.creator),
-    firstPublishYear: parseYear(metadata.year ?? metadata.date ?? null),
-    description: firstOf(metadata.description),
-    publisher: firstOf(metadata.publisher),
-    pageCount: pageCount !== null && Number.isNaN(pageCount) ? null : pageCount,
-    subjects: splitSubjects(metadata.subject),
+    id: `${ITUNES_ID_PREFIX}${item.trackId}`,
+    title: item.trackName ?? 'Untitled',
+    author: item.artistName ?? null,
+    firstPublishYear: parseYear(item.releaseDate ?? null),
+    description: item.description ?? null,
+    // iTunes' ebook results carry no publisher or page-count fields at all.
+    publisher: null,
+    pageCount: null,
+    subjects: item.genres ?? [],
     coverUrl: cover,
     coverUrlLarge: cover,
-    source: 'archive'
+    source: 'itunes'
   }
 }
 
 export async function getBookDetail(id: string): Promise<BookDetail> {
-  if (id.startsWith(ARCHIVE_ID_PREFIX)) {
-    return getArchiveOrgDetail(id.slice(ARCHIVE_ID_PREFIX.length))
+  if (id.startsWith(ITUNES_ID_PREFIX)) {
+    return getItunesDetail(id.slice(ITUNES_ID_PREFIX.length))
   }
   return getOpenLibraryDetail(id)
 }

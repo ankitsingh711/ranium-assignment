@@ -1,4 +1,4 @@
-export type BookSource = 'openlibrary' | 'archive'
+export type BookSource = 'openlibrary' | 'itunes'
 
 export interface BookSummary {
   id: string
@@ -62,36 +62,22 @@ export interface OpenLibraryEditionsResponse {
 }
 
 /**
- * Fallback data source, used only when Open Library is unreachable. Many
- * fields on Internet Archive's items are inconsistently either a single
- * string or an array of strings, which is reflected below rather than
- * normalized away, so the mapping layer has to handle both explicitly.
+ * Fallback data source, used only when Open Library is unreachable. This is
+ * Apple's iTunes Search/Lookup API filtered to ebooks — it has no publisher
+ * or page-count fields at all (unlike Open Library), which is reflected by
+ * always mapping those to null for this source rather than guessing.
  */
-export interface ArchiveOrgSearchDoc {
-  identifier: string
-  title?: string
-  creator?: string | string[]
-  year?: string | number
+export interface ItunesBookResult {
+  trackId: number
+  trackName?: string
+  artistName?: string
+  releaseDate?: string
+  description?: string
+  artworkUrl100?: string
+  genres?: string[]
 }
 
-export interface ArchiveOrgSearchResponse {
-  response?: {
-    docs: ArchiveOrgSearchDoc[]
-  }
-}
-
-export interface ArchiveOrgMetadata {
-  identifier?: string
-  title?: string
-  creator?: string | string[]
-  description?: string | string[]
-  publisher?: string | string[]
-  year?: string | number
-  date?: string
-  subject?: string | string[]
-  imagecount?: string | number
-}
-
-export interface ArchiveOrgMetadataResponse {
-  metadata?: ArchiveOrgMetadata
+export interface ItunesSearchResponse {
+  resultCount: number
+  results: ItunesBookResult[]
 }
