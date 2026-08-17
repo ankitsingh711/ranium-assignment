@@ -28,13 +28,6 @@ defineEmits<{ toggleShortlist: [] }>()
         <div class="absolute right-2 top-2">
           <ShortlistButton variant="icon" :active="shortlisted" @toggle="$emit('toggleShortlist')" />
         </div>
-
-        <span
-          v-if="book.source === 'itunes'"
-          class="absolute left-2 top-2 rounded-full bg-surface-900/75 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur"
-        >
-          Apple Books
-        </span>
       </div>
       <div class="flex flex-1 flex-col gap-0.5 p-3">
         <h3 class="line-clamp-2 text-sm font-semibold leading-snug text-surface-900 group-hover:text-brand-700">

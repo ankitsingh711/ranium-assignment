@@ -9,7 +9,7 @@ const router = useRouter()
 const query = useState('book-search-query', () => (typeof route.query.q === 'string' ? route.query.q : ''))
 const hasSearched = useState('book-search-has-searched', () => false)
 const lastQuery = useState('book-search-last-query', () => '')
-const { results, searchLoading, searchError, usedFallback, searchBooks } = useBooks()
+const { results, searchLoading, searchError, searchBooks } = useBooks()
 
 const sort = useState<'relevance' | 'newest' | 'oldest'>('book-search-sort', () => 'relevance')
 const yearFrom = useState<number | null>('book-search-year-from', () => null)
@@ -65,7 +65,7 @@ if (route.query.q && !hasSearched.value) {
       <h1 class="text-3xl font-bold tracking-tight text-surface-900 sm:text-4xl">
         Find your next <span class="text-brand-600">book</span>
       </h1>
-      <p class="text-base text-surface-600">Search by title or author, powered by Open Library.</p>
+      <p class="text-base text-surface-600">Search by title or author, powered by Apple Books.</p>
     </div>
 
     <SearchBar v-model="query" :loading="searchLoading" @search="runSearch" />
@@ -92,15 +92,6 @@ if (route.query.q && !hasSearched.value) {
     />
 
     <div v-else class="flex flex-col gap-4">
-      <div
-        v-if="usedFallback"
-        class="flex items-center gap-2 rounded-control border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm text-brand-800"
-        role="status"
-      >
-        <Icon name="lucide:info" class="h-4 w-4 shrink-0" />
-        Open Library is unavailable right now — showing results from Apple Books instead.
-      </div>
-
       <SearchFilters
         v-model:sort="sort"
         v-model:year-from="yearFrom"
