@@ -30,10 +30,8 @@ const { isShortlisted, toggle } = useShortlist()
       :message="
         error.statusCode === 404
           ? 'This book doesn\'t exist, or the link is incorrect.'
-          : 'Could not reach Open Library. Check your connection and try again.'
+          : 'Could not reach the book data source. Check your connection and try again.'
       "
-      :fallback-href="error.statusCode === 404 ? undefined : 'https://books.google.com'"
-      fallback-label="Browse Google Books instead"
       @retry="refresh"
     />
 

@@ -1,9 +1,12 @@
+export type BookSource = 'openlibrary' | 'googlebooks'
+
 export interface BookSummary {
   id: string
   title: string
   author: string | null
   firstPublishYear: number | null
   coverUrl: string | null
+  source: BookSource
 }
 
 export interface BookDetail extends BookSummary {
@@ -56,4 +59,29 @@ export interface OpenLibraryEdition {
 
 export interface OpenLibraryEditionsResponse {
   entries: OpenLibraryEdition[]
+}
+
+/**
+ * Fallback data source, used only when Open Library is unreachable. Kept to
+ * the same minimal-fields-we-actually-use approach as the Open Library types.
+ */
+export interface GoogleBooksVolume {
+  id: string
+  volumeInfo?: {
+    title?: string
+    authors?: string[]
+    publishedDate?: string
+    description?: string
+    publisher?: string
+    pageCount?: number
+    categories?: string[]
+    imageLinks?: {
+      thumbnail?: string
+      large?: string
+    }
+  }
+}
+
+export interface GoogleBooksSearchResponse {
+  items?: GoogleBooksVolume[]
 }

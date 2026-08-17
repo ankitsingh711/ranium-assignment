@@ -6,7 +6,7 @@ const initialQuery = typeof route.query.q === 'string' ? route.query.q : ''
 const query = ref(initialQuery)
 const hasSearched = ref(false)
 const lastQuery = ref('')
-const { results, searchLoading, searchError, searchBooks } = useBooks()
+const { results, searchLoading, searchError, usedFallback, searchBooks } = useBooks()
 
 async function runSearch() {
   hasSearched.value = true
@@ -36,8 +36,6 @@ if (initialQuery) {
     <ErrorState
       v-else-if="searchError"
       :message="searchError"
-      :fallback-href="lastQuery ? googleBooksSearchUrl(lastQuery) : undefined"
-      fallback-label="Search Google Books instead"
       @retry="runSearch"
     />
 
@@ -55,6 +53,13 @@ if (initialQuery) {
     />
 
     <div v-else class="flex flex-col gap-4">
+      <div
+        v-if="usedFallback"
+        class="rounded-control border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm text-brand-800"
+        role="status"
+      >
+        Open Library is unavailable right now — showing results from Google Books instead.
+      </div>
       <p class="text-sm text-surface-600">
         {{ results.length }} result{{ results.length === 1 ? '' : 's' }} for “{{ lastQuery }}”
       </p>
