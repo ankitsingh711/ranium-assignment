@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand palette */
+  --color-brand-50: #f3f1ff;
+  --color-brand-100: #ebe7ff;
+  --color-brand-200: #d9d2ff;
+  --color-brand-300: #bcaeff;
+  --color-brand-400: #9a7fff;
+  --color-brand-500: #7c4dff;
+  --color-brand-600: #6a2df0;
+  --color-brand-700: #5920c9;
+  --color-brand-800: #481aa3;
+  --color-brand-900: #3c1985;
+
+  /* Neutral surface palette */
+  --color-surface-0: #ffffff;
+  --color-surface-50: #f8f8fb;
+  --color-surface-100: #f0f0f5;
+  --color-surface-200: #e2e2ea;
+  --color-surface-300: #c8c8d4;
+  --color-surface-600: #6b6b7a;
+  --color-surface-700: #4a4a58;
+  --color-surface-800: #2d2d38;
+  --color-surface-900: #1a1a22;
+
+  /* Semantic */
+  --color-danger-500: #dc2626;
+  --color-danger-600: #b91c1c;
+  --color-success-500: #16a34a;
+
+  /* Radius */
+  --radius-card: 0.75rem;
+  --radius-control: 0.5rem;
+
+  /* Font */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+body {
+  @apply bg-surface-50 text-surface-900 antialiased;
+}
+
+/* Consistent visible focus state for keyboard users */
+:focus-visible {
+  @apply outline-2 outline-offset-2 outline-brand-600;
+}
