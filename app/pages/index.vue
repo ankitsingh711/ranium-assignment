@@ -8,9 +8,42 @@ const hasSearched = ref(false)
 const lastQuery = ref('')
 const { results, searchLoading, searchError, usedFallback, searchBooks } = useBooks()
 
+const sort = ref<'relevance' | 'newest' | 'oldest'>('relevance')
+const yearFrom = ref<number | null>(null)
+const yearTo = ref<number | null>(null)
+const coverOnly = ref(false)
+
+const filtersActive = computed(
+  () => sort.value !== 'relevance' || yearFrom.value !== null || yearTo.value !== null || coverOnly.value
+)
+
+const filteredResults = computed(() => {
+  let books = results.value
+  if (yearFrom.value !== null) books = books.filter((b) => b.firstPublishYear !== null && b.firstPublishYear >= yearFrom.value!)
+  if (yearTo.value !== null) books = books.filter((b) => b.firstPublishYear !== null && b.firstPublishYear <= yearTo.value!)
+  if (coverOnly.value) books = books.filter((b) => b.coverUrl !== null)
+
+  if (sort.value !== 'relevance') {
+    books = [...books].sort((a, b) => {
+      const ay = a.firstPublishYear ?? -Infinity
+      const by = b.firstPublishYear ?? -Infinity
+      return sort.value === 'newest' ? by - ay : ay - by
+    })
+  }
+  return books
+})
+
+function clearFilters() {
+  sort.value = 'relevance'
+  yearFrom.value = null
+  yearTo.value = null
+  coverOnly.value = false
+}
+
 async function runSearch() {
   hasSearched.value = true
   lastQuery.value = query.value.trim()
+  clearFilters()
   router.replace({ query: lastQuery.value ? { q: lastQuery.value } : {} })
   await searchBooks(query.value)
 }
@@ -61,10 +94,37 @@ if (initialQuery) {
         <Icon name="lucide:info" class="h-4 w-4 shrink-0" />
         Open Library is unavailable right now — showing results from the Internet Archive instead.
       </div>
+
+      <SearchFilters
+        v-model:sort="sort"
+        v-model:year-from="yearFrom"
+        v-model:year-to="yearTo"
+        v-model:cover-only="coverOnly"
+        :active="filtersActive"
+        @clear="clearFilters"
+      />
+
       <p class="text-sm text-surface-600">
-        {{ results.length }} result{{ results.length === 1 ? '' : 's' }} for “{{ lastQuery }}”
+        {{ filteredResults.length }} result{{ filteredResults.length === 1 ? '' : 's' }}
+        {{ filtersActive ? `(of ${results.length})` : '' }} for “{{ lastQuery }}”
       </p>
-      <BookGrid :books="results" />
+
+      <EmptyState
+        v-if="filteredResults.length === 0"
+        icon="lucide:search-x"
+        title="No books match your filters"
+        message="Try widening the year range or clearing the cover filter."
+      >
+        <button
+          type="button"
+          class="mt-2 inline-flex items-center gap-1.5 rounded-control bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-brand-700 active:scale-[0.97]"
+          @click="clearFilters"
+        >
+          <Icon name="lucide:x" class="h-4 w-4" />
+          Clear filters
+        </button>
+      </EmptyState>
+      <BookGrid v-else :books="filteredResults" />
     </div>
   </div>
 </template>
