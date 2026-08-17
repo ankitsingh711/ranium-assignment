@@ -49,6 +49,30 @@ function upscaleArtwork(url: string | undefined): string | null {
   return url.replace(/\/\d+x\d+bb\.(jpg|png)$/, '/600x600bb.$1')
 }
 
+const HTML_ENTITIES: Record<string, string> = {
+  '&amp;': '&',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&quot;': '"',
+  '&#39;': "'",
+  '&apos;': "'",
+  '&nbsp;': ' '
+}
+
+// iTunes descriptions come back as HTML (`<b>`, `<i>`, `<br />`), which the
+// template renders as plain text (correctly — no `v-html`, no XSS risk from
+// third-party content) — so tags need stripping here rather than in markup.
+function stripHtml(html: string | undefined): string | null {
+  if (!html) return null
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&[a-z]+;|&#\d+;/gi, (entity) => HTML_ENTITIES[entity.toLowerCase()] ?? entity)
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
 function mapItunesResult(item: ItunesBookResult): BookSummary {
   return {
     id: `${ITUNES_ID_PREFIX}${item.trackId}`,
@@ -231,7 +255,7 @@ async function getItunesDetail(trackId: string): Promise<BookDetail> {
     title: item.trackName ?? 'Untitled',
     author: item.artistName ?? null,
     firstPublishYear: parseYear(item.releaseDate ?? null),
-    description: item.description ?? null,
+    description: stripHtml(item.description),
     // iTunes' ebook results carry no publisher or page-count fields at all.
     publisher: null,
     pageCount: null,

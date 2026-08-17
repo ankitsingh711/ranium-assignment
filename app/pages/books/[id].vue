@@ -59,7 +59,7 @@ const { isShortlisted, toggle } = useShortlist()
           <ShortlistButton :active="isShortlisted(book.id)" @toggle="toggle(book)" />
         </div>
 
-        <p class="max-w-2xl text-sm leading-relaxed text-surface-800">
+        <p class="max-w-2xl whitespace-pre-line text-sm leading-relaxed text-surface-800">
           {{ book.description ?? 'No description available for this book.' }}
         </p>
 
