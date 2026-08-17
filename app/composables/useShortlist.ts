@@ -2,30 +2,34 @@ import type { BookDetail, BookSummary, ShortlistItem } from '~/types/book'
 
 const STORAGE_KEY = 'shelf:shortlist'
 
-const items = ref<ShortlistItem[]>([])
-let hydrated = false
+// Module-level, but only ever read/written on the client, where a module is
+// truly a per-tab singleton — safe, unlike sharing reactive *state* this way.
+let hydratedFromStorage = false
 
-function hydrate() {
-  if (hydrated || !import.meta.client) return
-  hydrated = true
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) items.value = JSON.parse(raw) as ShortlistItem[]
-  } catch {
-    items.value = []
-  }
-}
-
-function persist() {
+function persist(items: ShortlistItem[]) {
   if (!import.meta.client) return
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items.value))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
   } catch {
+    // Storage may be full or disabled (e.g. private browsing) — fail silently.
   }
 }
 
 export function useShortlist() {
-  hydrate()
+  // useState (not a module-level ref) so the list is request-scoped on the
+  // server and a shared singleton on the client — a plain module-level ref
+  // would be reused across every SSR request on the same server process.
+  const items = useState<ShortlistItem[]>('shortlist', () => [])
+
+  if (import.meta.client && !hydratedFromStorage) {
+    hydratedFromStorage = true
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) items.value = JSON.parse(raw) as ShortlistItem[]
+    } catch {
+      // Corrupt/blocked storage — start from an empty shortlist rather than crashing.
+    }
+  }
 
   const isShortlisted = (id: string) => items.value.some((item) => item.id === id)
 
@@ -42,12 +46,12 @@ export function useShortlist() {
         addedAt: Date.now()
       }
     ]
-    persist()
+    persist(items.value)
   }
 
   function remove(id: string) {
     items.value = items.value.filter((item) => item.id !== id)
-    persist()
+    persist(items.value)
   }
 
   function toggle(book: BookSummary | BookDetail) {

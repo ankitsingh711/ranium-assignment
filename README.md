@@ -80,9 +80,9 @@ stories/                  Storybook stories (SearchBar, ShortlistButton)
 
 No Nuxt server routes were needed: Open Library's endpoints are public and CORS-friendly, so calling them directly from the client keeps the data flow to one hop and easy to explain.
 
-**State management**: no external state library. `useShortlist()` holds one module-level `ref` shared by every component that calls it (Nuxt's plugin/module system already gives this composable a singleton-like scope per app instance) — no prop-drilling, no Pinia needed for a single piece of shared state.
+**State management**: no external state library. `useShortlist()` holds its list in Nuxt's [`useState`](https://nuxt.com/docs/api/composables/use-state) rather than a plain module-level `ref` — `useState` is request-scoped on the server and a shared singleton on the client, so every component sees the same reactive list without prop-drilling and without one user's server-rendered request being able to leak into another's. (An earlier version of this composable used a module-level `ref`, which is a common Nuxt SSR trap: a plain module-scoped ref is a single object reused across *every* request the Node server handles, not per-request — it caused an intermittent SSR crash, `Attempting to define property on object that is not extensible`, and would have leaked shortlist data between concurrent users in production. Fixed by switching to `useState`.)
 
-**Persistence**: `useShortlist()` reads from `localStorage` on first client-side use and writes back on every add/remove. All storage access is guarded with `import.meta.client` so it never runs during SSR, and `try/catch` around both read and write so a disabled/full storage degrades to an in-memory (session-only) shortlist instead of crashing.
+**Persistence**: `useShortlist()` reads from `localStorage` once per client session (guarded by a module-level flag that's safe here because it never runs on the server) and writes back on every add/remove. All storage access is guarded with `import.meta.client` so it never runs during SSR, and `try/catch` around both read and write so a disabled/full storage degrades to an in-memory (session-only) shortlist instead of crashing.
 
 ## Assumptions
 
