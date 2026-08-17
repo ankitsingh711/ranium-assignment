@@ -26,3 +26,4 @@ logs
 *storybook.log
 storybook-static
 *.tsbuildinfo
+.vercel
