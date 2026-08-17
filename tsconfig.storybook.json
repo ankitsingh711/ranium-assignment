@@ -1,0 +1,14 @@
+{
+  "extends": "./.nuxt/tsconfig.app.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true
+  },
+  "include": [
+    ".nuxt/nuxt.d.ts",
+    "app/**/*",
+    "*.d.ts",
+    "stories/**/*",
+    ".storybook/**/*"
+  ]
+}

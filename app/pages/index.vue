@@ -36,6 +36,8 @@ if (initialQuery) {
     <ErrorState
       v-else-if="searchError"
       :message="searchError"
+      :fallback-href="lastQuery ? googleBooksSearchUrl(lastQuery) : undefined"
+      fallback-label="Search Google Books instead"
       @retry="runSearch"
     />
 
