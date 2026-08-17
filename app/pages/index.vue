@@ -41,7 +41,7 @@ if (initialQuery) {
 
     <EmptyState
       v-else-if="hasSearched && results.length === 0"
-      icon="🔍"
+      icon="lucide:search-x"
       title="No books found"
       :message="`Nothing matched “${lastQuery}”. Try a different title or author.`"
     />
@@ -55,10 +55,11 @@ if (initialQuery) {
     <div v-else class="flex flex-col gap-4">
       <div
         v-if="usedFallback"
-        class="rounded-control border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm text-brand-800"
+        class="flex items-center gap-2 rounded-control border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm text-brand-800"
         role="status"
       >
-        Open Library is unavailable right now — showing results from Google Books instead.
+        <Icon name="lucide:info" class="h-4 w-4 shrink-0" />
+        Open Library is unavailable right now — showing results from the Internet Archive instead.
       </div>
       <p class="text-sm text-surface-600">
         {{ results.length }} result{{ results.length === 1 ? '' : 's' }} for “{{ lastQuery }}”

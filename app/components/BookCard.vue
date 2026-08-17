@@ -20,8 +20,8 @@ defineEmits<{ toggleShortlist: [] }>()
           loading="lazy"
           class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         >
-        <div v-else class="flex h-full w-full flex-col items-center justify-center gap-1 px-4 text-center">
-          <span class="text-2xl" aria-hidden="true">📕</span>
+        <div v-else class="flex h-full w-full flex-col items-center justify-center gap-1.5 px-4 text-center">
+          <Icon name="lucide:book-x" class="h-6 w-6 text-surface-300" />
           <span class="text-xs text-surface-600">No cover available</span>
         </div>
 
@@ -30,10 +30,10 @@ defineEmits<{ toggleShortlist: [] }>()
         </div>
 
         <span
-          v-if="book.source === 'googlebooks'"
+          v-if="book.source === 'archive'"
           class="absolute left-2 top-2 rounded-full bg-surface-900/75 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur"
         >
-          Google Books
+          Internet Archive
         </span>
       </div>
       <div class="flex flex-1 flex-col gap-0.5 p-3">

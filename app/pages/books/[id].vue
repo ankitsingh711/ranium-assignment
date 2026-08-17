@@ -14,11 +14,9 @@ const { isShortlisted, toggle } = useShortlist()
   <div>
     <NuxtLink
       to="/"
-      class="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-surface-600 transition-colors hover:text-brand-700"
+      class="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-surface-600 transition-colors hover:-translate-x-0.5 hover:text-brand-700"
     >
-      <svg viewBox="0 0 20 20" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12.5 4.5L7 10l5.5 5.5" />
-      </svg>
+      <Icon name="lucide:arrow-left" class="h-4 w-4" />
       Back to search
     </NuxtLink>
 
@@ -45,7 +43,7 @@ const { isShortlisted, toggle } = useShortlist()
             class="h-full w-full object-cover"
           >
           <div v-else class="flex flex-col items-center gap-2 px-4 text-center" aria-hidden="true">
-            <span class="text-3xl">📕</span>
+            <Icon name="lucide:book-x" class="h-8 w-8 text-surface-300" />
             <span class="text-sm text-surface-600">No cover available</span>
           </div>
         </div>
@@ -66,18 +64,27 @@ const { isShortlisted, toggle } = useShortlist()
         </p>
 
         <dl class="grid max-w-sm grid-cols-2 gap-4 border-t border-surface-200 pt-5 text-sm">
-          <div>
-            <dt class="font-medium text-surface-600">Publisher</dt>
-            <dd class="mt-0.5 text-surface-900">{{ book.publisher ?? 'Unknown' }}</dd>
+          <div class="flex items-start gap-2.5">
+            <Icon name="lucide:building-2" class="mt-0.5 h-4 w-4 shrink-0 text-surface-600" />
+            <div>
+              <dt class="font-medium text-surface-600">Publisher</dt>
+              <dd class="mt-0.5 text-surface-900">{{ book.publisher ?? 'Unknown' }}</dd>
+            </div>
           </div>
-          <div>
-            <dt class="font-medium text-surface-600">Pages</dt>
-            <dd class="mt-0.5 text-surface-900">{{ book.pageCount ?? 'Unknown' }}</dd>
+          <div class="flex items-start gap-2.5">
+            <Icon name="lucide:file-text" class="mt-0.5 h-4 w-4 shrink-0 text-surface-600" />
+            <div>
+              <dt class="font-medium text-surface-600">Pages</dt>
+              <dd class="mt-0.5 text-surface-900">{{ book.pageCount ?? 'Unknown' }}</dd>
+            </div>
           </div>
         </dl>
 
         <div v-if="book.subjects.length > 0" class="border-t border-surface-200 pt-5">
-          <h2 class="mb-2.5 text-sm font-medium text-surface-600">Subjects</h2>
+          <h2 class="mb-2.5 flex items-center gap-1.5 text-sm font-medium text-surface-600">
+            <Icon name="lucide:tags" class="h-4 w-4" />
+            Subjects
+          </h2>
           <ul class="flex flex-wrap gap-2">
             <li v-for="subject in book.subjects.slice(0, 12)" :key="subject">
               <NuxtLink

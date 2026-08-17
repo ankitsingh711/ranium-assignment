@@ -63,16 +63,14 @@ onUnmounted(() => {
               aria-label="Close shortlist"
               @click="$emit('close')"
             >
-              <svg viewBox="0 0 20 20" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path stroke-linecap="round" d="M5 5l10 10M15 5L5 15" />
-              </svg>
+              <Icon name="lucide:x" class="h-4 w-4" />
             </button>
           </header>
 
           <div class="flex-1 overflow-y-auto p-4">
             <EmptyState
               v-if="items.length === 0"
-              icon="⭐"
+              icon="lucide:star"
               title="Your shortlist is empty"
               message="Search for books and tap the star to save them here."
             />
@@ -90,8 +88,8 @@ onUnmounted(() => {
                     loading="lazy"
                     class="h-20 w-14 rounded-control object-cover"
                   >
-                  <div v-else class="flex h-20 w-14 items-center justify-center rounded-control bg-surface-100 text-[10px] text-surface-600" aria-hidden="true">
-                    No cover
+                  <div v-else class="flex h-20 w-14 items-center justify-center rounded-control bg-surface-100 text-surface-300" aria-hidden="true">
+                    <Icon name="lucide:book-x" class="h-5 w-5" />
                   </div>
                 </NuxtLink>
                 <div class="flex min-w-0 flex-1 flex-col gap-1">
@@ -101,9 +99,10 @@ onUnmounted(() => {
                   <p class="line-clamp-1 text-xs text-surface-600">{{ item.author ?? 'Unknown author' }}</p>
                   <button
                     type="button"
-                    class="mt-auto self-start text-xs font-medium text-danger-600 hover:text-danger-500"
+                    class="mt-auto inline-flex w-fit items-center gap-1 self-start text-xs font-medium text-danger-600 transition-colors hover:text-danger-500"
                     @click="remove(item.id)"
                   >
+                    <Icon name="lucide:trash-2" class="h-3.5 w-3.5" />
                     Remove
                   </button>
                 </div>

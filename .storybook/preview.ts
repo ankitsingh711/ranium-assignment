@@ -1,5 +1,13 @@
 import type { Preview } from '@storybook/vue3-vite'
+import { setup } from '@storybook/vue3-vite'
+import { addCollection, Icon } from '@iconify/vue'
+import { lucideIcons } from '../app/utils/icons'
 import '../app/assets/css/main.css'
+
+addCollection({ prefix: 'lucide', width: 24, height: 24, icons: lucideIcons })
+setup((app) => {
+  app.component('Icon', Icon)
+})
 
 const preview: Preview = {
   parameters: {
