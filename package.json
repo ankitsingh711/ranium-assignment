@@ -23,6 +23,8 @@
     "@storybook/addon-docs": "^10.5.8",
     "@storybook/vue3-vite": "^10.5.8",
     "@vitejs/plugin-vue": "^6.0.8",
-    "storybook": "^10.5.8"
+    "storybook": "^10.5.8",
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.3.10"
   }
 }
