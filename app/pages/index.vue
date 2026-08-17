@@ -2,16 +2,19 @@
 const route = useRoute()
 const router = useRouter()
 
-const initialQuery = typeof route.query.q === 'string' ? route.query.q : ''
-const query = ref(initialQuery)
-const hasSearched = ref(false)
-const lastQuery = ref('')
+// All of this page's own state lives in useState (not plain refs) for the
+// same reason useBooks()'s search state does: this page unmounts when you
+// open a book's detail page, and a plain ref would reset to its default on
+// every return trip instead of showing what was already there.
+const query = useState('book-search-query', () => (typeof route.query.q === 'string' ? route.query.q : ''))
+const hasSearched = useState('book-search-has-searched', () => false)
+const lastQuery = useState('book-search-last-query', () => '')
 const { results, searchLoading, searchError, usedFallback, searchBooks } = useBooks()
 
-const sort = ref<'relevance' | 'newest' | 'oldest'>('relevance')
-const yearFrom = ref<number | null>(null)
-const yearTo = ref<number | null>(null)
-const coverOnly = ref(false)
+const sort = useState<'relevance' | 'newest' | 'oldest'>('book-search-sort', () => 'relevance')
+const yearFrom = useState<number | null>('book-search-year-from', () => null)
+const yearTo = useState<number | null>('book-search-year-to', () => null)
+const coverOnly = useState('book-search-cover-only', () => false)
 
 const filtersActive = computed(
   () => sort.value !== 'relevance' || yearFrom.value !== null || yearTo.value !== null || coverOnly.value
@@ -48,7 +51,10 @@ async function runSearch() {
   await searchBooks(query.value)
 }
 
-if (initialQuery) {
+// Only auto-run on a genuine first load of a shared/bookmarked `?q=` URL —
+// not on every remount, since hasSearched (and results) already persist
+// across navigation via useState above.
+if (route.query.q && !hasSearched.value) {
   runSearch()
 }
 </script>

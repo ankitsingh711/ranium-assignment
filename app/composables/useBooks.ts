@@ -77,10 +77,15 @@ async function searchItunesBooks(query: string, signal: AbortSignal): Promise<Bo
 }
 
 export function useBooks() {
-  const searchLoading = ref(false)
-  const searchError = ref<string | null>(null)
-  const usedFallback = ref(false)
-  const results = ref<BookSummary[]>([])
+  // useState (not a plain ref) so search results survive navigating to a
+  // book's detail page and back — the search page unmounts on navigation,
+  // which would otherwise reset a plain ref back to empty on every return
+  // trip, forcing a full re-search (and re-triggering the Open Library ->
+  // fallback timeout dance) just to look at results the user already had.
+  const searchLoading = useState('book-search-loading', () => false)
+  const searchError = useState<string | null>('book-search-error', () => null)
+  const usedFallback = useState('book-search-used-fallback', () => false)
+  const results = useState<BookSummary[]>('book-search-results', () => [])
 
   let activeController: AbortController | null = null
 
