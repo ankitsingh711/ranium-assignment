@@ -53,8 +53,14 @@ async function runSearch() {
 
 // Only auto-run on a genuine first load of a shared/bookmarked `?q=` URL —
 // not on every remount, since hasSearched (and results) already persist
-// across navigation via useState above.
-if (route.query.q && !hasSearched.value) {
+// across navigation via useState above. Client-only: runSearch() sets
+// hasSearched/searchLoading synchronously before its actual await point,
+// so if this ran during SSR too, that half-finished state would be what
+// gets serialized into the payload (SSR doesn't wait for this un-awaited
+// call) — the client would then hydrate believing a search is already in
+// progress and never actually start one, leaving the page stuck loading
+// forever on every hard refresh with `?q=` in the URL.
+if (import.meta.client && route.query.q && !hasSearched.value) {
   runSearch()
 }
 </script>
