@@ -15,7 +15,7 @@ Shelf lets you search for books by title or author, browse results with cover/ti
 - Result cards showing cover, title, author, and first publish year, with graceful fallbacks for missing data
 - Shareable/bookmarkable book detail pages at `/books/{workId}`
 - Detail page: large cover, description, author, publisher, page count, subjects
-- Graceful handling of invalid/non-existent book IDs and API failures, including a 10s request timeout so an unreachable Open Library shows an error instead of hanging
+- Graceful handling of invalid/non-existent book IDs and API failures, including a 5s request timeout so an unreachable Open Library shows an error instead of hanging
 - On a failed search, a "Search Google Books instead" link (opens in a new tab) — a soft fallback, not a second data source; see Tradeoffs
 - Add/remove a book from a shortlist, from either the results grid or the detail page
 - Shortlist panel (slide-over) accessible from the header, with its own empty state

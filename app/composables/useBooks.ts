@@ -24,7 +24,7 @@ function describeWork(description: OpenLibraryWork['description']): string | nul
   return description.value ?? null
 }
 
-const REQUEST_TIMEOUT_MS = 10_000
+const REQUEST_TIMEOUT_MS = 5_000
 
 export function useBooks() {
   const searchLoading = ref(false)
